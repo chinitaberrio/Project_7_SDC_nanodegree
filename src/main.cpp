@@ -24,7 +24,7 @@ int main() {
   vector<double> map_waypoints_dy;
 
   // Waypoint map to read from
-  string map_file_ = "../data/highway_map.csv";
+  string map_file_ = "/home/stephany/Self-driving car program/Localization_path_control/Project_7/data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
 
@@ -98,6 +98,16 @@ int main() {
            *   sequentially every .02 seconds
            */
 
+          // moves the car
+          double dist_inc = 0.5; // 50 miles per hour
+          for (int i = 0; i < 50; ++i) { //50 points in the path planner
+            double next_s = car_s+(i+1)*dist_inc;
+            double next_d = 6;
+            vector<double> xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            next_x_vals.push_back(xy[0]);
+            next_y_vals.push_back(xy[1]);
+          }
+          // end
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
