@@ -54,7 +54,7 @@ int main() {
   // start in lane 1
   int lane = 1;
   // have a reference velocity to target
-  double ref_vel = 49.5; //mph
+  double ref_vel = 0.0; //mph
 
 
   h.onMessage([&ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
@@ -126,12 +126,24 @@ int main() {
               if((check_car_s > car_s)&&((check_car_s-car_s)<30)){
                 // take action
                 // do something else, like changing lane or something
-                ref_vel = 29.5; //mph
+                // ref_vel = 29.5; //mph
                 too_close = true;
+                if (lane>0){
+                  lane = 0;
+                }
+
+
               }
 
             }
 
+          }
+
+          if(too_close){
+            ref_vel -= .224; // 5m/s2
+          }
+          else if (ref_vel < 49.5) {
+            ref_vel += .224;
           }
 
 
@@ -153,7 +165,6 @@ int main() {
           double ref_yaw = deg2rad(car_yaw);
 
           // if previos size is almost empty, use the car as starting reference
-          std::cout << "size of the prev " << prev_size;
           if (prev_size < 2) {
              //use two points that make the path tangent to the car
             double prev_car_x = car_x - cos(car_yaw);
