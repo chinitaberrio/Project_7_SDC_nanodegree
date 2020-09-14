@@ -106,33 +106,43 @@ int main() {
 
           // detecting a vehicle in front of us
           bool too_close = false;
+          bool left_obs = true;
+          bool right_obs = false;
 
           //find ref_v to use
           for (int i = 0; i < sensor_fusion.size(); ++i) {
             // car is in my lane 6th position in the vector
             float d = sensor_fusion[i][6];
-            // checking if the vector is in my lane, each lane is 4 meters so we need to check for a range
-            if(d<(2+4*lane+2)&& d>(2+4*lane-2)){
-              double vx = sensor_fusion[i][3];
-              double vy = sensor_fusion[i][4];
-              // magnitud of the velocity of the car on my lane
-              double check_speed = sqrt(vx*vx + vy*vy);
-              // check for the position of the vehicle
-              double check_car_s = sensor_fusion[i][5];
-              // location of the car at the end of my projected path
-              check_car_s+=((double)prev_size*0.02*check_speed);
 
-              // Is the location of the vehicle within my path ?
-              if((check_car_s > car_s)&&((check_car_s-car_s)<30)){
-                // take action
-                // do something else, like changing lane or something
-                // ref_vel = 29.5; //mph
-                too_close = true;
-                if (lane>0){
-                  lane = 0;
-                }
+            double vx = sensor_fusion[i][3];
+            double vy = sensor_fusion[i][4];
+            // magnitud of the velocity of the car on my lane
+            double check_speed = sqrt(vx*vx + vy*vy);
+            // check for the position of the vehicle
+            double check_car_s = sensor_fusion[i][5];
+            // location of the car at the end of my projected path
+            check_car_s+=((double)prev_size*0.02*check_speed);
+            // Is the location of the vehicle within my path ?
 
+            if((check_car_s > (car_s+5))&&((check_car_s-car_s)<30)){
+              // take action
+              // checking if the vector is in my lane, each lane is 4 meters so we need to check for a range
+              if(d<(2+4*lane+2)&& d>(2+4*lane-2)){
+                  too_close = true;
 
+                  if (lane>0){
+                    lane = lane-1;
+                  }
+              }
+
+              //checking if the vehicle is on my left
+              if(d<(2+4*(lane-1)+2)&& d>(2+4*(lane-1)-2)){
+                left_obs = true;
+              }
+
+              //checking if the vehicle is on my right
+              if(d<(2+4*(lane+1)+2)&& d>(2+4*(lane+1)-2)){
+                right_obs = true;
               }
 
             }
@@ -140,6 +150,16 @@ int main() {
           }
 
           if(too_close){
+
+            //changing lanes
+            if (lane > 0 && not(left_obs)){
+              lane = lane-1;
+            }
+            else if (lane < 2 && not(right_obs)) {
+              lane = lane+1;
+
+            }
+
             ref_vel -= .224; // 5m/s2
           }
           else if (ref_vel < 49.5) {
