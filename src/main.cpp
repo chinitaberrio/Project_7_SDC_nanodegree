@@ -80,6 +80,7 @@ int main() {
           double car_x = j[1]["x"];
           double car_y = j[1]["y"];
           double car_s = j[1]["s"];
+          double cur_s = j[1]["s"];
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"];
@@ -106,8 +107,8 @@ int main() {
 
           // detecting a vehicle in front of us
           bool too_close = false;
-          bool left_obs = true;
-          bool right_obs = false;
+          bool left_free = true;
+          bool right_free = true;
 
           //find ref_v to use
           for (int i = 0; i < sensor_fusion.size(); ++i) {
@@ -120,47 +121,47 @@ int main() {
             double check_speed = sqrt(vx*vx + vy*vy);
             // check for the position of the vehicle
             double check_car_s = sensor_fusion[i][5];
+            double check_cur_s = check_car_s;
             // location of the car at the end of my projected path
             check_car_s+=((double)prev_size*0.02*check_speed);
-            // Is the location of the vehicle within my path ?
 
-            if((check_car_s > (car_s+5))&&((check_car_s-car_s)<30)){
-              // take action
+            // Is future location of the vehicle within my path ?
+            if((check_car_s > car_s)&&((check_car_s-car_s)<30)){ // checks for the end of the trajectories
               // checking if the vector is in my lane, each lane is 4 meters so we need to check for a range
               if(d<(2+4*lane+2)&& d>(2+4*lane-2)){
                   too_close = true;
-
-                  if (lane>0){
-                    lane = lane-1;
-                  }
               }
-
-              //checking if the vehicle is on my left
-              if(d<(2+4*(lane-1)+2)&& d>(2+4*(lane-1)-2)){
-                left_obs = true;
-              }
-
-              //checking if the vehicle is on my right
-              if(d<(2+4*(lane+1)+2)&& d>(2+4*(lane+1)-2)){
-                right_obs = true;
-              }
-
             }
 
+            // Is future location of the vehicle within my path?
+            if(((car_s - 30) < check_car_s) && ((car_s + 30) > check_car_s)){ //&& ((cur_s - 30) > check_cur_s) && ((cur_s + 30) < check_cur_s)){
+              //checking if the vehicle is on my left
+              if(d<(2+4*(lane-1)+2)&& d>(2+4*(lane-1)-2) ){
+                left_free = false;
+              }
+            }
+
+            if(((car_s - 30) < check_car_s) && ((car_s + 30) > check_car_s)){ //&& ((cur_s - 30) > check_cur_s) && ((cur_s + 30) < check_cur_s)){
+              //checking if the vehicle is on my right
+              if(d<(2+4*(lane+1)+2)&& d>(2+4*(lane+1)-2) ){
+                right_free = false;
+              }
+            }
           }
 
           if(too_close){
 
+            ref_vel -= .224; // 5m/s2
+
             //changing lanes
-            if (lane > 0 && not(left_obs)){
+            if (lane > 0 && left_free){
               lane = lane-1;
             }
-            else if (lane < 2 && not(right_obs)) {
+            else if (lane < 2 && right_free) {
               lane = lane+1;
 
             }
 
-            ref_vel -= .224; // 5m/s2
           }
           else if (ref_vel < 49.5) {
             ref_vel += .224;

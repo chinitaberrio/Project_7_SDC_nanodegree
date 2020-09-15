@@ -21,9 +21,29 @@ Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoi
 The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
 
 ## Basic components
-The vehicle is able to keep his position within the current lane, when another vehicle is located in front, I look for:
- 1. Vehicles on my left (-5 to 30 m from the current *s*)
- 2. Vehicles on my right (-5 to 30 m from the current *s*)
+The vehicle is able to keep its position within the current lane, when another vehicle is located in front, I look for:
+
+```
+- if detected car lane is in our lane and if it's within 0 and 30 meters then mark
+     - `too_close` is true.
+- if detected car lane is in the right lane and if it's in within ± 30 meters then mark
+     - `free_right` as false
+- if detected car lane is in the left lane and if it's in within ± 30 meters then mark
+     - `free_left` as false.
+
+```
+Then I check the previous flags: 
+
+```
+- if `too_close`
+      then reduce the `ref_vel` by 0.224 (5m/s^2)
+       - if `free_right` and lane is less than 2
+               then lane = lane +1
+       - if `free_left` and lane is greater than 0
+               then lane = lane -1
+- else if `ref_vel` is less than `49.5`
+      then increase the `ref_vel` by 0.224 (5m/s^2)
+```
 
 The vehicle has a preferece to be on the most left lane (high speed lane), but if it's not possible, the vehicle will move to the right lane.  
 
